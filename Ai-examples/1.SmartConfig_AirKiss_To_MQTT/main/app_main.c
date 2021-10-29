@@ -41,9 +41,11 @@
 #include <lwip/netdb.h>
 #include "xpwm.h"
 
-#ifndef DEVECE_ID
-#define DEVECE_ID "DEV00003"
-#endif
+#include "User_DataProcess.h"
+
+//#ifndef DEVECE_ID
+//#define DEVECE_ID "DEV00003"
+//#endif
 
 void TaskSmartConfigAirKiss2Net(void *parm);
 
@@ -58,13 +60,12 @@ void TaskSmartConfigAirKiss2Net(void *parm);
 //  *    有任何技术问题邮箱： support@aithinker.com
 //  *    @team: Ai-Thinker Open Team 安信可开源团队-半颗心脏 xuhongv@aithinker.com
 
-typedef struct __User_data
-{
-	char allData[1024];
-	int dataLen;
-} User_data;
-
-User_data user_data;
+//typedef struct __User_data
+//{
+//	char allData[1024];
+//	int dataLen;
+//} User_data;
+//User_data user_data;
 
 static const char *TAG = "AIThinkerDemo Log";
 static EventGroupHandle_t wifi_event_group;
@@ -73,8 +74,8 @@ static const int ESPTOUCH_DONE_BIT = BIT1;
 static const int AIRKISS_DONE_BIT = BIT2;
 static xTaskHandle handleLlocalFind = NULL;
 static xTaskHandle handleMqtt = NULL;
-static xQueueHandle ParseJSONQueueHandler = NULL; //解析json数据的队列
-static xTaskHandle mHandlerParseJSON = NULL;	  //任务队列
+xQueueHandle ParseJSONQueueHandler = NULL; //解析json数据的队列
+xTaskHandle mHandlerParseJSON = NULL;	  //任务队列
 
 #define BUF_SIZE (1024)
 //近场发现自定义消息
@@ -91,7 +92,7 @@ int sock_fd;
 #define DEVICE_TYPE "aithinker"
 
 //mqtt
-static esp_mqtt_client_handle_t client;
+esp_mqtt_client_handle_t client;
 
 //是否连接服务器
 bool isConnect2Server = false;
@@ -133,6 +134,7 @@ static void post_data_to_clouds()
 	cJSON_Delete(pRoot);
 }
 
+#if 0
 /* 
  * @Description: 解析下发数据的队列逻辑处理
  * @param: null
@@ -183,6 +185,8 @@ void Task_ParseJSON(void *pvParameters)
 		cJSON_Delete(pJsonRoot);
 	}
 }
+#endif
+
 /* 
  * @Description: MQTT服务器的下发消息回调
  * @param: 
@@ -207,6 +211,8 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		ESP_LOGI(TAG, "sent subscribe[%s] successful, msg_id=%d", MqttTopicSub, msg_id);
 		ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
 		//post_data_to_clouds();
+		//data_up_task
+		xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 10240, NULL, 6, NULL);
 		isConnect2Server = true;
 		break;
 		//断开连接回调
@@ -592,7 +598,7 @@ void TaskButton(void *pvParameters)
 
 
 
-
+#if 0
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
 #ifndef DEVECE_ID
@@ -793,7 +799,7 @@ void TaskMqtt_Up_Data(void *pvParameters)
 		vTaskDelay(100);
 	}
 }
-
+#endif
 
 /******************************************************************************
  * FunctionName : app_main
@@ -839,8 +845,7 @@ void app_main(void)
 
 	//外设初始化
 	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
-	//data_up_task
-	xTaskCreate(TaskMqtt_Up_Data, "TaskMqtt_Up_Data", 10240, NULL, 6, NULL);
+
 	pwm_init_data();
 	light_driver_set_rgb(255,0,0);
 
