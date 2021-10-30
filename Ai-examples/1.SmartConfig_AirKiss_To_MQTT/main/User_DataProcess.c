@@ -53,6 +53,85 @@ void mqtt_publish_data_interface(char *publish_topic, const char *pub_payload,ui
 	esp_mqtt_client_publish(client, publish_topic, pub_payload, strlen(pub_payload), qos, retain);
 }
 
+
+/**************************************
+ * @description: user public up_data, json_load_send_data
+ * @param {type} 
+ * @return: 
+ */
+static int Json_Get_Battery()
+{
+	return 88;
+}
+static int Json_Get_Longitude()
+{
+	return 1131234567;
+}
+static int Json_Get_Latitude()
+{
+	return 221234567;
+}
+static int Json_Get_Altitude()
+{
+	return 1100;
+}
+static int Json_Get_Env_Temperature()
+{
+	return 250+(rand()%30);
+}
+static int Json_Get_Env_Humidity()
+{
+	return 700+(rand()%30);
+}
+static int Json_Get_Env_Pressure()
+{
+	return 1010+(rand()%30);
+}
+static int Json_Get_Wind_Speed()
+{
+	return 10+(rand()%30);
+}
+static int Json_Get_Wind_Direction()
+{
+	return 100+(rand()%30);
+}
+static uint32_t Json_Get_Switch()
+{
+	return 0;
+}
+static int Json_Get_Variable_Val_0()
+{
+	return 0;
+}
+static int Json_Get_Variable_Val_1()
+{
+	return 0;
+}
+static int Json_Get_Variable_Val_2()
+{
+	return 0;
+}
+
+static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
+{
+	uint8_t i = 0;
+	for(i = 0 ; i < 32; i++)
+	{
+		if(cmd->Switch & 1 << i)
+		{
+
+		}else
+		{
+		
+		}
+	}
+	
+	/*code  cmd->Variable_Val_0 cmd->Variable_Val_1 cmd->Variable_Val_2*/
+}
+/*****************END*******************/
+
+
+
 /**
  * @description: joson_create_uav_data_send
  * @param {type} 
@@ -66,36 +145,33 @@ void joson_create_uav_data_send()
 	cJSON *data = NULL;
 		
     /* Here we construct some JSON standards, from the JSON site. */
-		static uint64_t msg_num = 0;
-		msg_num++;
-		
-		static uint64_t timestamp = 1492488028395;
-		timestamp += 1000;
-		
-		int rand_num = rand()%30;
+	static uint64_t msg_num = 0;
+	msg_num++;
+	
+	static uint64_t timestamp = 1492488028395;
+	timestamp += 1000;
 
-			/*模拟JSON数据*/
-		root = cJSON_CreateObject();
-		cJSON_AddItemToObject(root,"head",head = cJSON_CreateObject());
-			cJSON_AddNumberToObject(head, "dev_id", 1);
-			cJSON_AddNumberToObject(head, "msg_id", MSG_DATA_UP_ID);
-			cJSON_AddNumberToObject(head, "msg_no", msg_num);
-			cJSON_AddNumberToObject(head, "timestamp", timestamp);
-		cJSON_AddItemToObject(root,"data",data = cJSON_CreateObject());
-			cJSON_AddNumberToObject(data, "Battery", 55);
-			cJSON_AddNumberToObject(data, "Longitude", 1131234567);
-			cJSON_AddNumberToObject(data, "Latitude", 221234567);
-			cJSON_AddNumberToObject(data, "Altitude", 900);
-			cJSON_AddNumberToObject(data, "Env_Temperature", 250+rand_num);
-			cJSON_AddNumberToObject(data, "Env_Humidity", 700+rand_num);
-			cJSON_AddNumberToObject(data, "Env_Pressure", 1010+rand_num);
-			cJSON_AddNumberToObject(data, "Rainfall", rand_num);
-			cJSON_AddNumberToObject(data, "Wind_Speed", 10+rand_num);
-			cJSON_AddNumberToObject(data, "Wind_Direction", 100+rand_num);
-			cJSON_AddNumberToObject(data, "Switch", mqtt_cmd.Switch);
-			cJSON_AddNumberToObject(data, "Variable_Val_0", mqtt_cmd.Variable_Val_0);
-			cJSON_AddNumberToObject(data, "Variable_Val_1", mqtt_cmd.Variable_Val_1);
-			cJSON_AddNumberToObject(data, "Variable_Val_2", mqtt_cmd.Variable_Val_2);
+		/*模拟JSON数据*/
+	root = cJSON_CreateObject();
+	cJSON_AddItemToObject(root,"head",head = cJSON_CreateObject());
+		cJSON_AddNumberToObject(head, "dev_id", 1);
+		cJSON_AddNumberToObject(head, "msg_id", MSG_DATA_UP_ID);
+		cJSON_AddNumberToObject(head, "msg_no", msg_num);
+		cJSON_AddNumberToObject(head, "timestamp", timestamp);
+	cJSON_AddItemToObject(root,"data",data = cJSON_CreateObject());
+		cJSON_AddNumberToObject(data, "Battery", Json_Get_Battery());
+		cJSON_AddNumberToObject(data, "Longitude", Json_Get_Longitude());
+		cJSON_AddNumberToObject(data, "Latitude", Json_Get_Latitude());
+		cJSON_AddNumberToObject(data, "Altitude", Json_Get_Altitude());
+		cJSON_AddNumberToObject(data, "Env_Temperature", Json_Get_Env_Temperature());
+		cJSON_AddNumberToObject(data, "Env_Humidity", Json_Get_Env_Humidity());
+		cJSON_AddNumberToObject(data, "Env_Pressure", Json_Get_Env_Pressure());
+		cJSON_AddNumberToObject(data, "Wind_Speed", Json_Get_Wind_Speed());
+		cJSON_AddNumberToObject(data, "Wind_Direction", Json_Get_Wind_Direction());
+		cJSON_AddNumberToObject(data, "Switch", Json_Get_Switch());
+		cJSON_AddNumberToObject(data, "Variable_Val_0", Json_Get_Variable_Val_0());
+		cJSON_AddNumberToObject(data, "Variable_Val_1", Json_Get_Variable_Val_1());
+		cJSON_AddNumberToObject(data, "Variable_Val_2", Json_Get_Variable_Val_2());
 		
 		/*Cjson 2 char*/
 		const char *pub_payload = NULL;
@@ -189,6 +265,7 @@ static uint8_t json_parse(struct __User_data *pMqttMsg)
 					mqtt_cmd.Variable_Val_1 = cJSON_GetObjectItem(data_item, "Variable_Val_1")->valueint;
 					mqtt_cmd.Variable_Val_2 = cJSON_GetObjectItem(data_item, "Variable_Val_2")->valueint;
 					printf("Switch: %d\n Variable_Val_0: %d\n Variable_Val_1: %d\n Variable_Val_2: %d\n", mqtt_cmd.Switch,mqtt_cmd.Variable_Val_0,mqtt_cmd.Variable_Val_1,mqtt_cmd.Variable_Val_2);
+					Json_Recv_Cmd_Process(&mqtt_cmd);
 				}
 				break;
                    
