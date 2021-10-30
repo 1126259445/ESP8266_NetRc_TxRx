@@ -99,6 +99,7 @@ bool isConnect2Server = false;
 
 char udp_msg[512]; //固定的本地广播数据
 
+#if 0
 /* 
  * @Description: 上报数据到服务器
  * @param: null
@@ -134,7 +135,7 @@ static void post_data_to_clouds()
 	cJSON_Delete(pRoot);
 }
 
-#if 0
+
 /* 
  * @Description: 解析下发数据的队列逻辑处理
  * @param: null
@@ -435,7 +436,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		//开启json解析线程
 		if (mHandlerParseJSON == NULL)
 		{
-			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024, NULL, 3, &mHandlerParseJSON);
+			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 3, &mHandlerParseJSON);
 		}
 
 		if (ret != pdPASS)
@@ -564,14 +565,14 @@ void TaskSmartConfigAirKiss2Net(void *parm)
 static void ButtonShortPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonShortPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
-	light_driver_set_rgb(0,255,0);
-	post_data_to_clouds();
+//	light_driver_set_rgb(0,255,0);
+//	post_data_to_clouds();
 }
 //长按函数
 static void ButtonLongPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonLongPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
-	light_driver_set_rgb_cycle(2);
+//	light_driver_set_rgb_cycle(2);
 	//重启并进去配网模式
 	xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
 }
@@ -644,7 +645,7 @@ void app_main(void)
 	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
 
 	pwm_init_data();
-	light_driver_set_rgb(255,0,0);
+	light_driver_set_rgb(0,0,0);
 
 	tcpip_adapter_init();
 	wifi_event_group = xEventGroupCreate();

@@ -7,6 +7,7 @@
 #include "cJSON.h"
 #include <stdio.h>
 #include "string.h"
+#include "xpwm.h"
 
 #include "User_DataProcess.h"
 
@@ -101,15 +102,15 @@ static uint32_t Json_Get_Switch()
 }
 static int Json_Get_Variable_Val_0()
 {
-	return 0;
+	return mqtt_cmd.Variable_Val_0;
 }
 static int Json_Get_Variable_Val_1()
 {
-	return 0;
+	return mqtt_cmd.Variable_Val_1;
 }
 static int Json_Get_Variable_Val_2()
 {
-	return 0;
+	return mqtt_cmd.Variable_Val_2;
 }
 
 static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
@@ -127,6 +128,7 @@ static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
 	}
 	
 	/*code  cmd->Variable_Val_0 cmd->Variable_Val_1 cmd->Variable_Val_2*/
+	light_driver_set_rgb(255,0,0);
 }
 /*****************END*******************/
 
@@ -222,8 +224,7 @@ static uint8_t json_parse(struct __User_data *pMqttMsg)
     
     if (root)
     {
-        //head_item = cJSON_GetObjectItem(root, "head");
-		head_item = cJSON_Parse(root);
+		head_item = cJSON_GetObjectItem(root, "head");
         
         if (head_item)
         {
