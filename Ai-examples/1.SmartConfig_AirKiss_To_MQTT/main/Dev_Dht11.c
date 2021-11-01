@@ -34,7 +34,7 @@ int Get_Dht11_Temperature()
 }
 
 
-#if 1
+#if 0
 // 毫秒延时函数
 //===========================================
 void  delay_ms(uint32_t C_time)
@@ -50,15 +50,12 @@ void delay_ms(uint32_t delay_ms)
 
 /*******************Data read*********************/
 
-#if 1
 //DHT11端口复位，发出起始信号（IO发送）
 static void DHT11_rest (void)
 { 
 	gpio_set_direction(DHT11_IO, GPIO_MODE_OUTPUT);
-    gpio_set_level(DHT11_IO, 1);
-    delay_ms(1); 
     gpio_set_level(DHT11_IO, 0);
-	delay_ms(25); //拉低至少18ms						
+	delay_ms(20); //拉低至少18ms						
     gpio_set_level(DHT11_IO, 1);							
 	os_delay_us(5); 
 }
@@ -120,16 +117,19 @@ uint8_t Read_Dht11_Data()
     uint8_t buf[5] = {0};
     uint8_t i = 0;
     DHT11_rest();//DHT11端口复位，发出起始信号
-    if(DHT11_check()==0){ //等待DHT11回应
-        for(i=0;i<5;i++){//读取5位数据
+    if(DHT11_check()==0) //等待DHT11回应
+    { 
+        for(i=0;i<5;i++)  //读取5位数据
+        {
             buf[i]=Dht11_ReadByte(); //读出数据
-            printf("buf[%d] = %d\r\n",i,buf[i]);
         }
-       // if((buf[0]+buf[1]+buf[2]+buf[3])==buf[4]) //数据校验
+        if((buf[0]+buf[1]+buf[2]+buf[3])==buf[4]) //数据校验
         {	
-            Dht11.Humidity=buf[0]; //将湿度值放入
-            Dht11.Temperature=buf[2]; //将温度值放入
-            printf("temp = %d\t hum = %d\r\n", buf[2],buf[0]);
+            Dht11.Humidity=((buf[0]*10) + (buf[1]%10))/10.0; //将湿度值放入
+            Dht11.Temperature=((buf[2]*10) + (buf[3]%10))/10.0; //将温度值放入
+            
+            printf("Dht11.Temperature= %f\t  Dht11.Humidity = %f\r\n", Dht11.Temperature, Dht11.Humidity);
+            printf("temp = %d.%d\t hum = %d.%d\r\n", buf[2],buf[3],buf[0],buf[1]);
         }
     }else
     {
@@ -137,7 +137,7 @@ uint8_t Read_Dht11_Data()
     }
     return 0;	    
 }
-#endif
+
 
 void dht11_gpio_init(void)
 {
@@ -157,88 +157,4 @@ void Dht11_Init()
 {
      dht11_gpio_init();
 }
-
-
-#if 0
-uint8_t DHT11_Read_Bit(void)
-{
-    uint8_t retry=0;
-    while(gpio_get_level(DHT11_IO)&&retry<100)//等待变为低电平
-    {
-        retry++;
-        os_delay_us(1);
-    }
-    retry=0;
-    while(!gpio_get_level(DHT11_IO)&&retry<100)//等待变高电平
-    {
-        retry++;
-        os_delay_us(1);
-    }
-    os_delay_us(40);//等待 40us
-    if(gpio_get_level(DHT11_IO))return 1;
-    else return 0;
-}
-
-uint8_t Read_Dht11_Data()
-{
-    uint32_t i = 0, j = 0;
-    uint8_t data[5] = {0};
-
-    // 设置连接DHT11的引脚输出为高，持续20毫秒
-    gpio_set_direction(DHT11_IO, GPIO_MODE_OUTPUT);
-    gpio_set_level(DHT11_IO, 1);
-    delay_ms(20);
-
-    // 设置连接DHT11的引脚输出为低，持续20毫秒
-    gpio_set_level(DHT11_IO, 0);
-    delay_ms(20);
-
-    // 设置连接DHT11的引脚设置为输入，并延时40微秒,准备读写
-    gpio_set_level(DHT11_IO, 1);
-    //os_delay_us(40);
-    gpio_set_direction(DHT11_IO, GPIO_MODE_INPUT);
-
-    // 限时等待连接DHT11的引脚输入状态变成0，即等待获取DHT响应，如长时间未变为0则转为读取失败状态
-    i = 0;
-    while (gpio_get_level(DHT11_IO) == 1) {
-        if (i >= 100) {
-            return;
-        }
-        i++;
-        os_delay_us(1);
-    }
-    if(i < 100)
-    {
-        i = 0;
-        while (gpio_get_level(DHT11_IO) == 0) {
-            if (i >= 100) {
-                return;
-            }
-            i++;
-            os_delay_us(1);
-        }
-    }
-    
-    if(i< 100)
-    {
-        printf("i < 100\r\n");
-        for (i = 0; i < 5; i++) {
-            // 每次循环计数归零
-            for(j = 0; j < 8; j++)
-            {
-                data[i] = data[i] << 1;
-                data[i] |= DHT11_Read_Bit();      
-            }
-            //  printf("data = %d\r\n",data[i]);
-        }
-    }
-
-    Dht11.Humidity = data[0];
-    Dht11.Temperature = data[2];
-
-    printf("temp = %d\thum = %d\r\n", (int)Dht11.Temperature,(int)Dht11.Humidity);
-}
-
-#endif
-
 
