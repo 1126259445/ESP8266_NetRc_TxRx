@@ -10,6 +10,7 @@
 #include "xpwm.h"
 
 #include "User_DataProcess.h"
+#include "Dev_Dht11.h"
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
@@ -78,11 +79,11 @@ static int Json_Get_Altitude()
 }
 static int Json_Get_Env_Temperature()
 {
-	return 250+(rand()%30);
+	return Get_Dht11_Temperature();
 }
 static int Json_Get_Env_Humidity()
 {
-	return 700+(rand()%30);
+	return Get_Dht11_Humidity();
 }
 static int Json_Get_Env_Pressure()
 {
