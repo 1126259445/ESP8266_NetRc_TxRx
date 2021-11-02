@@ -2,6 +2,7 @@
 #define __DHT11_H__
 
 #define DHT11_IO GPIO_NUM_5
+#define GPIO_DHT11_PIN_SEL  (1ULL<<DHT11_IO)
 
 typedef struct 
 {

@@ -145,7 +145,7 @@ void dht11_gpio_init(void)
 
     io_cf.intr_type = GPIO_INTR_DISABLE;
     io_cf.mode = GPIO_MODE_OUTPUT;
-    io_cf.pin_bit_mask = (GPIO_Pin_5);
+    io_cf.pin_bit_mask = GPIO_DHT11_PIN_SEL;
     io_cf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_cf.pull_up_en = GPIO_PULLUP_DISABLE;
 
