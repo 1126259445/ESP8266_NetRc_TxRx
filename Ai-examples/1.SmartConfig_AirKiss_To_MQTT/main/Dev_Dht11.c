@@ -130,12 +130,11 @@ uint8_t Read_Dht11_Data()
             
             printf("Dht11.Temperature= %f\t  Dht11.Humidity = %f\r\n", Dht11.Temperature, Dht11.Humidity);
             printf("temp = %d.%d\t hum = %d.%d\r\n", buf[2],buf[3],buf[0],buf[1]);
-        }
-    }else
-    {
-         return 1;
+            return 1;
+        }      
     }
-    return 0;	    
+    
+    return 0;  
 }
 
 

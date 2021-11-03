@@ -9,6 +9,7 @@
 #include "esp_system.h"
 
 #include "Dev_Dht11.h"
+#include "Dev_Oled_I2c.h"
 
 TaskHandle_t Sensor_Handle = NULL;
 
@@ -32,7 +33,17 @@ void Task_Sensor(void *pvParameters)
         {
             Dht11_Tick = 0;
             printf("read Dht11 \r\n");
-            Read_Dht11_Data();
+            uint8_t ret = Read_Dht11_Data();
+            if(ret == 1)
+            {
+                char Temperature[10] = {0};
+                char Humidity[10] = {0};
+                sprintf(Temperature,"T :%.1f",Get_Dht11_Temperature()/10.0f);
+                sprintf(Humidity,"H :%.1f",Get_Dht11_Humidity()/10.0f);
+                OLED_ShowString(0,0,Temperature,SIZE32);
+                OLED_ShowString(0,4,Humidity,SIZE32);
+                printf("%s,%s\r\n",Temperature,Humidity);
+            }
         }
 
         if(++Speed_Tick > 50)
