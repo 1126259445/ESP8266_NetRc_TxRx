@@ -491,10 +491,8 @@ void  OLED_I2C_Init(void)
 	OLED_Clear();// 清屏
     //OLED_DrawBMP(0,0,128,8,BMP_WAWA);
 	OLED_DrawBMP(32,0,32+58,8,BMP_Apple);
-    delay_ms(1500);// 延迟(必须要有)
+    delay_ms(2000);// 延迟(必须要有)
 	OLED_Clear();// 清屏
 
 	OLED_Set_Pos(0,0);// 设置数据写入的起始行、列
-	delay_ms(1500);// 延迟(必须要有)
-	OLED_Clear();// 清屏
 }
