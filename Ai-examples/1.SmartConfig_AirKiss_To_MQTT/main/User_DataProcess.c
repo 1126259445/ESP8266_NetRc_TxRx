@@ -116,20 +116,7 @@ static int Json_Get_Variable_Val_2()
 
 static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
 {
-	uint8_t i = 0;
-	for(i = 0 ; i < 32; i++)
-	{
-		if(cmd->Switch & 1 << i)
-		{
-
-		}else
-		{
-		
-		}
-	}
-	
 	/*code  cmd->Variable_Val_0 cmd->Variable_Val_1 cmd->Variable_Val_2*/
-	light_driver_set_rgb(255,0,0);
 }
 /*****************END*******************/
 

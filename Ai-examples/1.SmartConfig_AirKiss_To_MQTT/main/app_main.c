@@ -217,7 +217,7 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
 		//post_data_to_clouds();
 		//data_up_task
-		xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 10240, NULL, 6, NULL);
+		xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
 		isConnect2Server = true;
 		break;
 		//断开连接回调
@@ -444,11 +444,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		//开启json解析线程
 		if (mHandlerParseJSON == NULL)
 		{
-			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 3, &mHandlerParseJSON);
+			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 5, &mHandlerParseJSON);
 		}
 
 		//Task_HttpRequestTime 
-		ret = xTaskCreate(Task_HttpRequestTime, "Task_HttpRequestTime", 1024*20, NULL, 5, NULL);
+		ret = xTaskCreate(Task_HttpRequestTime, "Task_HttpRequestTime", 1024*10, NULL, 5, NULL);
 		if (ret != pdPASS)
 		{
 			printf("create Task_HttpRequestTime thread failed.\n");
