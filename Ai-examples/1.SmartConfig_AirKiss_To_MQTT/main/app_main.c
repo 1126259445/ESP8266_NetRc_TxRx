@@ -41,6 +41,7 @@
 #include <lwip/netdb.h>
 #include "xpwm.h"
 
+#include "User_HttpRequest_Time.h"
 #include "User_DataProcess.h"
 #include "User_Sensor.h"
 #include "Dev_Oled_I2c.h"
@@ -431,6 +432,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		int ret = pdFAIL;
 		if (handleMqtt == NULL)
 			ret = xTaskCreate(TaskXMqttRecieve, "TaskXMqttRecieve", 1024 * 4, NULL, 5, &handleMqtt);
+		if (ret != pdPASS)
+		{
+			printf("create TaskXMqttRecieve thread failed.\n");
+		}
 
 		if (ParseJSONQueueHandler == NULL)
 			ParseJSONQueueHandler = xQueueCreate(5, sizeof(struct esp_mqtt_msg_type *));
@@ -441,9 +446,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 3, &mHandlerParseJSON);
 		}
 
+		//Task_HttpRequestTime 
+		ret = xTaskCreate(Task_HttpRequestTime, "Task_HttpRequestTime", 1024*20, NULL, 5, NULL);
 		if (ret != pdPASS)
 		{
-			printf("create TaskXMqttRecieve thread failed.\n");
+			printf("create Task_HttpRequestTime thread failed.\n");
 		}
 
 		break;
