@@ -141,7 +141,7 @@ static uint8_t Http_Data_process(char *recv_buf)
 }
 
 
-void Task_HttpRequestTime(void *pvParameters)
+static void Task_HttpRequestTime(void *pvParameters)
 {
     const struct addrinfo hints = {
         .ai_family = AF_INET,
@@ -237,4 +237,13 @@ void Task_HttpRequestTime(void *pvParameters)
     }
 }
 
-
+void HTTP_Time_Init()
+{
+    int ret = pdFAIL;
+//Task_HttpRequestTime 
+    ret = xTaskCreate(Task_HttpRequestTime, "Task_HttpRequestTime", 1024*10, NULL, 5, NULL);
+    if (ret != pdPASS)
+    {
+        printf("create Task_HttpRequestTime thread failed.\n");
+    }
+}

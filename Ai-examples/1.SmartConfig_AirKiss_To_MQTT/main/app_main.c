@@ -447,13 +447,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 5, &mHandlerParseJSON);
 		}
 
-		//Task_HttpRequestTime 
-		ret = xTaskCreate(Task_HttpRequestTime, "Task_HttpRequestTime", 1024*10, NULL, 5, NULL);
-		if (ret != pdPASS)
-		{
-			printf("create Task_HttpRequestTime thread failed.\n");
-		}
-
 		break;
 	}
 
