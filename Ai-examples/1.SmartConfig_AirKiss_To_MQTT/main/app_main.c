@@ -41,6 +41,7 @@
 #include <lwip/netdb.h>
 #include "xpwm.h"
 
+#include "User_HttpRequest_Weather.h"
 #include "User_HttpRequest_Time.h"
 #include "User_DataProcess.h"
 #include "User_Sensor.h"
