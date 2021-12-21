@@ -46,6 +46,7 @@
 #include "User_DataProcess.h"
 #include "User_Sensor.h"
 #include "Dev_Oled_I2c.h"
+#include "Dev_Pwm.h"
 
 //#ifndef DEVECE_ID
 //#define DEVECE_ID "DEV00003"
@@ -93,7 +94,7 @@ int sock_fd;
 //按键定义
 #define BUTTON_GPIO 4
 //设备信息
-#define DEVICE_TYPE "aithinker"
+#define DEVICE_TYPE "ESP_NetRc_Rx"
 
 //mqtt
 esp_mqtt_client_handle_t client;
@@ -102,95 +103,6 @@ esp_mqtt_client_handle_t client;
 bool isConnect2Server = false;
 
 char udp_msg[512]; //固定的本地广播数据
-
-#if 0
-/* 
- * @Description: 上报数据到服务器
- * @param: null
- * @return: 
-*/
-static void post_data_to_clouds()
-{
-
-	if (!isConnect2Server)
-		return;
-
-	cJSON *pRoot = cJSON_CreateObject();
-	cJSON *pHeader = cJSON_CreateObject();
-	cJSON *pAttr = cJSON_CreateArray();
-
-	/* add 1st car to cars array */
-	cJSON_AddStringToObject(pHeader, "type", (DEVICE_TYPE));
-	cJSON_AddStringToObject(pHeader, "mac", deviceUUID);
-
-	//开关
-	cJSON *pAttrPower = cJSON_CreateObject();
-	cJSON_AddStringToObject(pAttrPower, "name", "powerstate");
-	cJSON_AddStringToObject(pAttrPower, "value", light_driver_get_switch() ? "on" : "off");
-	cJSON_AddItemToArray(pAttr, pAttrPower);
-
-	cJSON_AddItemToObject(pRoot, "header", pHeader);
-	cJSON_AddItemToObject(pRoot, "attr", pAttr);
-	char *s = cJSON_Print(pRoot);
-	ESP_LOGI(TAG, "post_data_to_clouds topic end : %s", MqttTopicPub);
-	ESP_LOGI(TAG, "post_data_to_clouds payload : %s", s);
-	esp_mqtt_client_publish(client, MqttTopicPub, s, strlen(s), 1, 0);
-	cJSON_free((void *)s);
-	cJSON_Delete(pRoot);
-}
-
-
-/* 
- * @Description: 解析下发数据的队列逻辑处理
- * @param: null
- * @return: 
-*/
-void Task_ParseJSON(void *pvParameters)
-{
-	printf("[SY] Task_ParseJSON_Message creat ... \n");
-	while (1)
-	{
-		struct __User_data *pMqttMsg;
-
-		printf("[%d] Task_ParseJSON_Message xQueueReceive wait ... \n", esp_get_free_heap_size());
-		xQueueReceive(ParseJSONQueueHandler, &pMqttMsg, portMAX_DELAY);
-
-		////首先整体判断是否为一个json格式的数据
-		cJSON *pJsonRoot = cJSON_Parse(pMqttMsg->allData);
-		//如果是否json格式数据
-		if (pJsonRoot == NULL)
-		{
-			printf("[SY] Task_ParseJSON_Message xQueueReceive not json ... \n");
-			goto __cJSON_Delete;
-		}
-
-		cJSON *pJSON_Item = cJSON_GetObjectItem(pJsonRoot, "msg");
-
-		if (!pJSON_Item)
-		{
-			//协议不正确
-			ESP_LOGE(TAG, " pJSON_Item not json ... \n");
-			goto __cJSON_Delete;
-		}
-
-		if (cJSON_IsNumber(pJSON_Item))
-		{
-			light_driver_set_switch(pJSON_Item->valueint);
-		}
-		else
-		{
-			//协议不正确
-			ESP_LOGE(TAG, " cJSON_IsNumber  not json ... \n");
-			goto __cJSON_Delete;
-		}
-
-		post_data_to_clouds();
-
-	__cJSON_Delete:
-		cJSON_Delete(pJsonRoot);
-	}
-}
-#endif
 
 /* 
  * @Description: MQTT服务器的下发消息回调
@@ -208,16 +120,17 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
 		msg_id = esp_mqtt_client_subscribe(client, MqttTopicSub, 1);
 
-		//ADD topic		
-		char topic[14] = {DEVECE_ID};
-		strcat(topic,"_DOWN");
-		esp_mqtt_client_subscribe(client, topic, 1);
-
 		ESP_LOGI(TAG, "sent subscribe[%s] successful, msg_id=%d", MqttTopicSub, msg_id);
 		ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
 		//post_data_to_clouds();
 		//data_up_task
-		xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
+		//xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
+		//开启json解析线程
+		xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 5, NULL);
+		if(ParseJSONQueueHandler == NULL)
+		{
+			ParseJSONQueueHandler = xQueueCreate(5, sizeof(struct esp_mqtt_msg_type *));
+		}
 		isConnect2Server = true;
 		break;
 		//断开连接回调
@@ -279,6 +192,14 @@ void TaskXMqttRecieve(void *p)
 
 	vTaskDelete(NULL);
 }
+
+
+
+
+
+
+
+
 
 /* 
  * @Description:  微信配网近场发现，可注释不要
@@ -437,16 +358,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		{
 			printf("create TaskXMqttRecieve thread failed.\n");
 		}
-
-		if (ParseJSONQueueHandler == NULL)
-			ParseJSONQueueHandler = xQueueCreate(5, sizeof(struct esp_mqtt_msg_type *));
-
-		//开启json解析线程
-		if (mHandlerParseJSON == NULL)
-		{
-			xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 5, &mHandlerParseJSON);
-		}
-
 		break;
 	}
 
@@ -634,9 +545,9 @@ void app_main(void)
 	sprintf(deviceUUID, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	sprintf((char *)deviceInfo, "{\"type\":\"%s\",\"mac\":\"%s\"}", DEVICE_TYPE, deviceUUID);
 	//组建MQTT订阅的主题
-	sprintf(MqttTopicSub, "/%s/%s/devSub", DEVICE_TYPE, deviceUUID);
+	sprintf(MqttTopicSub, "%s/Down", deviceUUID);
 	//组建MQTT推送的主题
-	sprintf(MqttTopicPub, "/%s/%s/devPub", DEVICE_TYPE, deviceUUID);
+	sprintf(MqttTopicPub, "%s/Up", deviceUUID);
 
 	ESP_LOGI(TAG, "flagNet: %d", flagNet);
 	ESP_LOGI(TAG, "deviceUUID: %s", deviceUUID);
@@ -645,11 +556,10 @@ void app_main(void)
 	ESP_LOGI(TAG, "MqttTopicPub: %s", MqttTopicPub);
 
 	//外设初始化
-	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
-	xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
-	OLED_I2C_Init();
-	//pwm_init_data();
-	//light_driver_set_rgb(0,0,0);
+	//xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
+	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
+	//OLED_I2C_Init();
+	Pwm_Init();
 
 	tcpip_adapter_init();
 	wifi_event_group = xEventGroupCreate();

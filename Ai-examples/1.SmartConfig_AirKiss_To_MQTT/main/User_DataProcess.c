@@ -11,6 +11,7 @@
 
 #include "User_DataProcess.h"
 #include "Dev_Dht11.h"
+#include "Dev_Pwm.h"
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
@@ -35,9 +36,7 @@ User_data user_data;
 typedef struct 
 {
     uint32_t  Switch ;
-	int32_t Variable_Val_0 ;
-	int32_t Variable_Val_1 ;
-	int32_t Variable_Val_2 ;
+	int32_t Variable_Val[8] ;
 }mqtt_cmd_struct;
 mqtt_cmd_struct mqtt_cmd;;
 
@@ -103,20 +102,21 @@ static uint32_t Json_Get_Switch()
 }
 static int Json_Get_Variable_Val_0()
 {
-	return mqtt_cmd.Variable_Val_0;
+	return mqtt_cmd.Variable_Val[0];
 }
 static int Json_Get_Variable_Val_1()
 {
-	return mqtt_cmd.Variable_Val_1;
+	return mqtt_cmd.Variable_Val[1];
 }
 static int Json_Get_Variable_Val_2()
 {
-	return mqtt_cmd.Variable_Val_2;
+	return mqtt_cmd.Variable_Val[2];
 }
 
 static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
 {
 	/*code  cmd->Variable_Val_0 cmd->Variable_Val_1 cmd->Variable_Val_2*/
+	Set_Pwm_All_Chinel_Val(8,(uint32_t*)(cmd->Variable_Val));
 }
 /*****************END*******************/
 
@@ -250,10 +250,22 @@ static uint8_t json_parse(struct __User_data *pMqttMsg)
 				if (data_item)
                 {
                     mqtt_cmd.Switch = cJSON_GetObjectItem(data_item, "Switch")->valueint;
-                    mqtt_cmd.Variable_Val_0 = cJSON_GetObjectItem(data_item, "Variable_Val_0")->valueint;
-					mqtt_cmd.Variable_Val_1 = cJSON_GetObjectItem(data_item, "Variable_Val_1")->valueint;
-					mqtt_cmd.Variable_Val_2 = cJSON_GetObjectItem(data_item, "Variable_Val_2")->valueint;
-					printf("Switch: %d\n Variable_Val_0: %d\n Variable_Val_1: %d\n Variable_Val_2: %d\n", mqtt_cmd.Switch,mqtt_cmd.Variable_Val_0,mqtt_cmd.Variable_Val_1,mqtt_cmd.Variable_Val_2);
+                    mqtt_cmd.Variable_Val[0] = cJSON_GetObjectItem(data_item, "Variable_Val_0")->valueint;
+					mqtt_cmd.Variable_Val[1] = cJSON_GetObjectItem(data_item, "Variable_Val_1")->valueint;
+					mqtt_cmd.Variable_Val[2] = cJSON_GetObjectItem(data_item, "Variable_Val_2")->valueint;
+				//	mqtt_cmd.Variable_Val[3] = cJSON_GetObjectItem(data_item, "Variable_Val_3")->valueint;
+				//	mqtt_cmd.Variable_Val[4] = cJSON_GetObjectItem(data_item, "Variable_Val_4")->valueint;
+				//	mqtt_cmd.Variable_Val[5] = cJSON_GetObjectItem(data_item, "Variable_Val_5")->valueint;
+				//	mqtt_cmd.Variable_Val[6] = cJSON_GetObjectItem(data_item, "Variable_Val_6")->valueint;
+				//	mqtt_cmd.Variable_Val[7] = cJSON_GetObjectItem(data_item, "Variable_Val_7")->valueint;
+
+				mqtt_cmd.Variable_Val[0] = 1000+mqtt_cmd.Variable_Val[0]*4;
+						mqtt_cmd.Variable_Val[1] = 1000+mqtt_cmd.Variable_Val[1]*4;
+								mqtt_cmd.Variable_Val[2] = 1000+mqtt_cmd.Variable_Val[2]*4;
+					printf("Switch: %d\n 0: %d\n 1: %d\n 2: %d\n 3: %d\n 4: %d\n 5: %d\n 6: %d\n 7: %d\n", \
+					mqtt_cmd.Switch,mqtt_cmd.Variable_Val[0],mqtt_cmd.Variable_Val[1],mqtt_cmd.Variable_Val[2], \
+					mqtt_cmd.Variable_Val[3],mqtt_cmd.Variable_Val[4],mqtt_cmd.Variable_Val[5], \
+					mqtt_cmd.Variable_Val[6],mqtt_cmd.Variable_Val[7]);
 					Json_Recv_Cmd_Process(&mqtt_cmd);
 				}
 				break;
