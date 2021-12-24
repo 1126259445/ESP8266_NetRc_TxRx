@@ -72,7 +72,7 @@ void TaskSmartConfigAirKiss2Net(void *parm);
 //} User_data;
 //User_data user_data;
 
-static const char *TAG = "AIThinkerDemo Log";
+static const char *TAG = "ESP_NetRc_Rx";
 static EventGroupHandle_t wifi_event_group;
 static const int CONNECTED_BIT = BIT0;
 static const int ESPTOUCH_DONE_BIT = BIT1;
@@ -102,6 +102,8 @@ esp_mqtt_client_handle_t client;
 //是否连接服务器
 bool isConnect2Server = false;
 
+bool isRecvFlinis = false;
+
 char udp_msg[512]; //固定的本地广播数据
 
 /* 
@@ -126,11 +128,8 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		//data_up_task
 		//xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
 		//开启json解析线程
-		xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*10, NULL, 5, NULL);
-		if(ParseJSONQueueHandler == NULL)
-		{
-			ParseJSONQueueHandler = xQueueCreate(5, sizeof(struct esp_mqtt_msg_type *));
-		}
+		xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*3, NULL, 5, NULL);
+
 		isConnect2Server = true;
 		break;
 		//断开连接回调
@@ -154,12 +153,15 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 	case MQTT_EVENT_DATA:
 	{
 		//ESP_LOGI(TAG, " xQueueReceive  data [%s] \n", event->data);
-		//发送数据到队列
-		struct __User_data *pTmper;
-		sprintf(user_data.allData, "%s", event->data);
-		pTmper = &user_data;
-		user_data.dataLen = event->data_len;
-		xQueueSend(ParseJSONQueueHandler, (void *)&pTmper, portMAX_DELAY);
+		if(event->data_len < 1024)
+		{
+			sprintf(user_data.allData, "%s", event->data);
+			user_data.dataLen = event->data_len;
+
+			isRecvFlinis = true;
+			
+			ESP_LOGI(TAG, "isRecvFlinis == true");
+		}
 		break;
 	}
 	default:
@@ -186,6 +188,7 @@ void TaskXMqttRecieve(void *p)
 		.keepalive = 120,					//心跳
 		.disable_auto_reconnect = false,	//开启自动重连
 		.disable_clean_session = false,		//开启 清除会话
+		.buffer_size = 1024*5,
 	};
 	client = esp_mqtt_client_init(&mqtt_cfg);
 	esp_mqtt_client_start(client);

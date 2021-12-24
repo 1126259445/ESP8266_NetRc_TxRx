@@ -188,7 +188,7 @@ void joson_create_uav_data_send()
  * @param {type} 
  * @return: 
  */
-static uint8_t json_parse(struct __User_data *pMqttMsg)
+static uint8_t json_parse(User_data *pMqttMsg)
 {
     cJSON *root, *head_item, *data_item;
     
@@ -284,18 +284,17 @@ static uint8_t json_parse(struct __User_data *pMqttMsg)
  * @param: null
  * @return: 
 */
-extern xQueueHandle ParseJSONQueueHandler; //解析json数据的队列
+extern bool isRecvFlinis; //解析json数据的队列
 void Task_ParseJSON(void *pvParameters)
 {
-	struct __User_data *pMqttMsg;
-	printf("[SY] Task_ParseJSON_Message creat ... \n");
 	while (1)
 	{
-		printf("Task_ParseJSON_Message xQueueReceive wait ... \n");
-		xQueueReceive(ParseJSONQueueHandler, &pMqttMsg, portMAX_DELAY);
-		json_parse(pMqttMsg);
-
-		vTaskDelay(1/portTICK_RATE_MS);
+		if(isRecvFlinis == true)
+		{
+			isRecvFlinis = false;
+			json_parse(&user_data);
+		}
+		vTaskDelay(10/portTICK_RATE_MS);
 	}
 }
 

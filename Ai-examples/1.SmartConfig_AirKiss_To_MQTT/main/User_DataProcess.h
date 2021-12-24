@@ -6,7 +6,7 @@
 #define DEVECE_ID "DEV00003"
 #endif
 
-typedef struct __User_data
+typedef struct 
 {
 	char allData[1024];
 	int dataLen;
