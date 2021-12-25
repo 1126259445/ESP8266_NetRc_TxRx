@@ -92,7 +92,7 @@ char MqttTopicSub[30], MqttTopicPub[30];
 int sock_fd;
 
 //按键定义
-#define BUTTON_GPIO 4
+#define BUTTON_GPIO 0
 //设备信息
 #define DEVICE_TYPE "ESP_NetRc_Rx"
 
@@ -306,6 +306,7 @@ static void TaskCreatSocket(void *pvParameters)
 		}
 	}
 }
+
 static void TaskRestartSystem(void *p)
 {
 	router_wifi_clean_info();
@@ -482,14 +483,12 @@ void TaskSmartConfigAirKiss2Net(void *parm)
 static void ButtonShortPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonShortPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
-//	light_driver_set_rgb(0,255,0);
-//	post_data_to_clouds();
+
 }
 //长按函数
 static void ButtonLongPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonLongPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
-//	light_driver_set_rgb_cycle(2);
 	//重启并进去配网模式
 	xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
 }
@@ -559,11 +558,11 @@ void app_main(void)
 	ESP_LOGI(TAG, "MqttTopicPub: %s", MqttTopicPub);
 
 	//外设初始化
-	//xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
-	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
-	//OLED_I2C_Init();
 	Pwm_Init();
-
+	//OLED_I2C_Init();
+	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
+	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
+	
 	tcpip_adapter_init();
 	wifi_event_group = xEventGroupCreate();
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
