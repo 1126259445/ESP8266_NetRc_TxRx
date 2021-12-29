@@ -47,6 +47,7 @@
 #include "User_Sensor.h"
 #include "Dev_Oled_I2c.h"
 #include "Dev_Pwm.h"
+#include "Dev_Ppm.h"
 
 //#ifndef DEVECE_ID
 //#define DEVECE_ID "DEV00003"
@@ -558,7 +559,8 @@ void app_main(void)
 	ESP_LOGI(TAG, "MqttTopicPub: %s", MqttTopicPub);
 
 	//外设初始化
-	Pwm_Init();
+	PPM_Init();
+	//Pwm_Init();
 	//OLED_I2C_Init();
 	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
 	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
