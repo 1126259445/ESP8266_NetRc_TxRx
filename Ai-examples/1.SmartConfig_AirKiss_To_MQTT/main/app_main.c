@@ -73,7 +73,7 @@ void TaskSmartConfigAirKiss2Net(void *parm);
 //} User_data;
 //User_data user_data;
 
-static const char *TAG = "ESP_NetRc_Rx";
+static const char *TAG = "ESP_NetRc_Tx";
 static EventGroupHandle_t wifi_event_group;
 static const int CONNECTED_BIT = BIT0;
 static const int ESPTOUCH_DONE_BIT = BIT1;
@@ -89,7 +89,8 @@ uint8_t deviceInfo[100] = {};
 //当前是否配网模式
 int flagNet = 0;
 char deviceUUID[17];
-char MqttTopicSub[30], MqttTopicPub[30];
+char MqttTopicSub[30];
+char MqttTopicPub[30];
 int sock_fd;
 
 //按键定义
@@ -121,15 +122,15 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		//连接成功
 	case MQTT_EVENT_CONNECTED:
 		ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-		msg_id = esp_mqtt_client_subscribe(client, MqttTopicSub, 1);
+		//msg_id = esp_mqtt_client_subscribe(client, MqttTopicSub, 1);
 
-		ESP_LOGI(TAG, "sent subscribe[%s] successful, msg_id=%d", MqttTopicSub, msg_id);
+		//ESP_LOGI(TAG, "sent subscribe[%s] successful, msg_id=%d", MqttTopicSub, msg_id);
 		ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
 		//post_data_to_clouds();
 		//data_up_task
-		//xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
+		xTaskCreate(Task_CreatJSON, "Task_CreatJSON", 1024*5, NULL, 6, NULL);
 		//开启json解析线程
-		xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*3, NULL, 5, NULL);
+		//xTaskCreate(Task_ParseJSON, "Task_ParseJSON", 1024*3, NULL, 5, NULL);
 
 		isConnect2Server = true;
 		break;
@@ -548,9 +549,9 @@ void app_main(void)
 	sprintf(deviceUUID, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	sprintf((char *)deviceInfo, "{\"type\":\"%s\",\"mac\":\"%s\"}", DEVICE_TYPE, deviceUUID);
 	//组建MQTT订阅的主题
-	sprintf(MqttTopicSub, "%s/Down", deviceUUID);
+	sprintf(MqttTopicSub, "%s/Up", deviceUUID);
 	//组建MQTT推送的主题
-	sprintf(MqttTopicPub, "%s/Up", deviceUUID);
+	sprintf(MqttTopicPub, "%s/Down", "34ab951a359b");
 
 	ESP_LOGI(TAG, "flagNet: %d", flagNet);
 	ESP_LOGI(TAG, "deviceUUID: %s", deviceUUID);

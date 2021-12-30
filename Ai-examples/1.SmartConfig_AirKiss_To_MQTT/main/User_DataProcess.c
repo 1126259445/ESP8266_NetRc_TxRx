@@ -12,6 +12,7 @@
 #include "User_DataProcess.h"
 #include "Dev_Dht11.h"
 #include "Dev_Pwm.h"
+#include "Dev_Ppm.h"
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
@@ -60,6 +61,7 @@ void mqtt_publish_data_interface(char *publish_topic, const char *pub_payload,ui
  * @param {type} 
  * @return: 
  */
+#if 0
 static int Json_Get_Battery()
 {
 	return 88;
@@ -96,22 +98,45 @@ static int Json_Get_Wind_Direction()
 {
 	return 100+(rand()%30);
 }
+#endif
 static uint32_t Json_Get_Switch()
 {
 	return 0;
 }
+
 static int Json_Get_Variable_Val_0()
 {
-	return mqtt_cmd.Variable_Val[0];
+	return (RC_ch[0] - 1000) / 4;
 }
 static int Json_Get_Variable_Val_1()
 {
-	return mqtt_cmd.Variable_Val[1];
+	return (RC_ch[1] - 1000)/4;
 }
 static int Json_Get_Variable_Val_2()
 {
-	return mqtt_cmd.Variable_Val[2];
+	return (RC_ch[2] - 1000)/4;
 }
+static int Json_Get_Variable_Val_3()
+{
+	return RC_ch[3];
+}
+static int Json_Get_Variable_Val_4()
+{
+	return RC_ch[4];
+}
+static int Json_Get_Variable_Val_5()
+{
+	return RC_ch[5];
+}
+static int Json_Get_Variable_Val_6()
+{
+	return RC_ch[6];
+}
+static int Json_Get_Variable_Val_7()
+{
+	return RC_ch[7];
+}
+
 
 static void Json_Recv_Cmd_Process(mqtt_cmd_struct* cmd)
 {
@@ -145,11 +170,11 @@ void joson_create_uav_data_send()
 	root = cJSON_CreateObject();
 	cJSON_AddItemToObject(root,"head",head = cJSON_CreateObject());
 		cJSON_AddNumberToObject(head, "dev_id", 1);
-		cJSON_AddNumberToObject(head, "msg_id", MSG_DATA_UP_ID);
+		cJSON_AddNumberToObject(head, "msg_id", MSG_DATA_DOWN_ID);
 		cJSON_AddNumberToObject(head, "msg_no", msg_num);
 		cJSON_AddNumberToObject(head, "timestamp", timestamp);
 	cJSON_AddItemToObject(root,"data",data = cJSON_CreateObject());
-		cJSON_AddNumberToObject(data, "Battery", Json_Get_Battery());
+/*		cJSON_AddNumberToObject(data, "Battery", Json_Get_Battery());
 		cJSON_AddNumberToObject(data, "Longitude", Json_Get_Longitude());
 		cJSON_AddNumberToObject(data, "Latitude", Json_Get_Latitude());
 		cJSON_AddNumberToObject(data, "Altitude", Json_Get_Altitude());
@@ -158,20 +183,26 @@ void joson_create_uav_data_send()
 		cJSON_AddNumberToObject(data, "Env_Pressure", Json_Get_Env_Pressure());
 		cJSON_AddNumberToObject(data, "Wind_Speed", Json_Get_Wind_Speed());
 		cJSON_AddNumberToObject(data, "Wind_Direction", Json_Get_Wind_Direction());
+*/
 		cJSON_AddNumberToObject(data, "Switch", Json_Get_Switch());
 		cJSON_AddNumberToObject(data, "Variable_Val_0", Json_Get_Variable_Val_0());
 		cJSON_AddNumberToObject(data, "Variable_Val_1", Json_Get_Variable_Val_1());
 		cJSON_AddNumberToObject(data, "Variable_Val_2", Json_Get_Variable_Val_2());
+		cJSON_AddNumberToObject(data, "Variable_Val_3", Json_Get_Variable_Val_3());
+		cJSON_AddNumberToObject(data, "Variable_Val_4", Json_Get_Variable_Val_4());
+		cJSON_AddNumberToObject(data, "Variable_Val_5", Json_Get_Variable_Val_5());
+		cJSON_AddNumberToObject(data, "Variable_Val_6", Json_Get_Variable_Val_6());
+		cJSON_AddNumberToObject(data, "Variable_Val_7", Json_Get_Variable_Val_7());
 		
 		/*Cjson 2 char*/
 		const char *pub_payload = NULL;
 		pub_payload = cJSON_Print(root);
 
-        char publish_topic[12] = {DEVECE_ID};
-	    strcat(publish_topic,"_UP");
+//        char publish_topic[12] = {DEVECE_ID};
+//	    strcat(publish_topic,"_UP");
 
         /*publish JSON data to server*/
-        mqtt_publish_data_interface(publish_topic, pub_payload,0,0);
+        mqtt_publish_data_interface(MqttTopicPub, pub_payload,0,0);
 
 		if(pub_payload!=NULL)
 		{
@@ -314,6 +345,6 @@ void Task_CreatJSON(void *pvParameters)
 			joson_create_uav_data_send();
 		}
 
-		vTaskDelay(1000/portTICK_RATE_MS);
+		vTaskDelay(100/portTICK_RATE_MS);
 	}
 }
