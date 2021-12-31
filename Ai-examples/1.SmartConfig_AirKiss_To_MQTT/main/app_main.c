@@ -48,29 +48,19 @@
 #include "Dev_Oled_I2c.h"
 #include "Dev_Pwm.h"
 
-//#ifndef DEVECE_ID
-//#define DEVECE_ID "DEV00003"
-//#endif
+
 
 void TaskSmartConfigAirKiss2Net(void *parm);
-
 //  *    基于 esp-idf esp8266芯片 rtos3.0 sdk 开发，共勉！
 //  *
 //  *   这是esp-touch或 微信airkiss配网以及近场发现的功能和连接MQTT服务器的的demo示范！
 //  *
-//  *   按键接线 GPIO0引脚下降沿触发，LED的正极接GPIO12，负极接GND；
-//  *   按键短按 ，改变灯具状态并上报状态到服务器；
+//  *   按键接线 GPIO0引脚下降沿触发;
+//  *   按键短按 ，
 //  *   按键长按 ，进去配网模式，搜索 "安信可科技" 微信公众号点击 WiFi配置；
 //  *
 //  *    有任何技术问题邮箱： support@aithinker.com
 //  *    @team: Ai-Thinker Open Team 安信可开源团队-半颗心脏 xuhongv@aithinker.com
-
-//typedef struct __User_data
-//{
-//	char allData[1024];
-//	int dataLen;
-//} User_data;
-//User_data user_data;
 
 static const char *TAG = "ESP_NetRc_Rx";
 static EventGroupHandle_t wifi_event_group;
@@ -82,7 +72,8 @@ static xTaskHandle handleMqtt = NULL;
 xQueueHandle ParseJSONQueueHandler = NULL; //解析json数据的队列
 xTaskHandle mHandlerParseJSON = NULL;	  //任务队列
 
-#define BUF_SIZE (1024)
+
+
 //近场发现自定义消息
 uint8_t deviceInfo[100] = {};
 //当前是否配网模式
@@ -95,6 +86,7 @@ int sock_fd;
 #define BUTTON_GPIO 0
 //设备信息
 #define DEVICE_TYPE "ESP_NetRc_Rx"
+#define TX_UUID "2cf4327733c5"	//TX UUID
 
 //mqtt
 esp_mqtt_client_handle_t client;
@@ -195,11 +187,6 @@ void TaskXMqttRecieve(void *p)
 
 	vTaskDelete(NULL);
 }
-
-
-
-
-
 
 
 
@@ -542,14 +529,15 @@ void app_main(void)
 	//获取芯片的内存分布，返回值具体见结构体 flash_size_map
 	printf("     system_get_flash_size_map(): %d \n", system_get_flash_size_map());
 	//获取mac地址（station模式）
-	uint8_t mac[6];
+	uint8_t mac[6]  ={0};
 	esp_read_mac(mac, ESP_MAC_WIFI_STA);
 	sprintf(deviceUUID, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	sprintf((char *)deviceInfo, "{\"type\":\"%s\",\"mac\":\"%s\"}", DEVICE_TYPE, deviceUUID);
+	
 	//组建MQTT订阅的主题
-	sprintf(MqttTopicSub, "%s/Down", deviceUUID);
+	sprintf(MqttTopicSub, "%s/Down", TX_UUID);
 	//组建MQTT推送的主题
-	sprintf(MqttTopicPub, "%s/Up", deviceUUID);
+	sprintf(MqttTopicPub, "%s/Up", TX_UUID);
 
 	ESP_LOGI(TAG, "flagNet: %d", flagNet);
 	ESP_LOGI(TAG, "deviceUUID: %s", deviceUUID);
