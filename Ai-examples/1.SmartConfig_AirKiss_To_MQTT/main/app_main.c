@@ -49,9 +49,6 @@
 #include "Dev_Pwm.h"
 #include "Dev_Ppm.h"
 
-//#ifndef DEVECE_ID
-//#define DEVECE_ID "DEV00003"
-//#endif
 
 void TaskSmartConfigAirKiss2Net(void *parm);
 
@@ -66,12 +63,6 @@ void TaskSmartConfigAirKiss2Net(void *parm);
 //  *    有任何技术问题邮箱： support@aithinker.com
 //  *    @team: Ai-Thinker Open Team 安信可开源团队-半颗心脏 xuhongv@aithinker.com
 
-//typedef struct __User_data
-//{
-//	char allData[1024];
-//	int dataLen;
-//} User_data;
-//User_data user_data;
 
 static const char *TAG = "ESP_NetRc_Tx";
 static EventGroupHandle_t wifi_event_group;
@@ -83,7 +74,6 @@ static xTaskHandle handleMqtt = NULL;
 xQueueHandle ParseJSONQueueHandler = NULL; //解析json数据的队列
 xTaskHandle mHandlerParseJSON = NULL;	  //任务队列
 
-#define BUF_SIZE (1024)
 //近场发现自定义消息
 uint8_t deviceInfo[100] = {};
 //当前是否配网模式
@@ -96,7 +86,7 @@ int sock_fd;
 //按键定义
 #define BUTTON_GPIO 0
 //设备信息
-#define DEVICE_TYPE "ESP_NetRc_Rx"
+#define DEVICE_TYPE "ESP_NetRc_Tx"
 
 //mqtt
 esp_mqtt_client_handle_t client;
@@ -548,10 +538,11 @@ void app_main(void)
 	esp_read_mac(mac, ESP_MAC_WIFI_STA);
 	sprintf(deviceUUID, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	sprintf((char *)deviceInfo, "{\"type\":\"%s\",\"mac\":\"%s\"}", DEVICE_TYPE, deviceUUID);
+
 	//组建MQTT订阅的主题
 	sprintf(MqttTopicSub, "%s/Up", deviceUUID);
 	//组建MQTT推送的主题
-	sprintf(MqttTopicPub, "%s/Down", "34ab951a359b");
+	sprintf(MqttTopicPub, "%s/Down", deviceUUID);
 
 	ESP_LOGI(TAG, "flagNet: %d", flagNet);
 	ESP_LOGI(TAG, "deviceUUID: %s", deviceUUID);
