@@ -106,35 +106,35 @@ static uint32_t Json_Get_Switch()
 
 static int Json_Get_Variable_Val_0()
 {
-	return (RC_ch[0] - 1000) / 4;
+	return (Rc.RC_ch[0] - 1000) / 4;
 }
 static int Json_Get_Variable_Val_1()
 {
-	return (RC_ch[1] - 1000)/4;
+	return (Rc.RC_ch[1] - 1000)/4;
 }
 static int Json_Get_Variable_Val_2()
 {
-	return (RC_ch[2] - 1000)/4;
+	return (Rc.RC_ch[2] - 1000)/4;
 }
 static int Json_Get_Variable_Val_3()
 {
-	return RC_ch[3];
+	return Rc.RC_ch[3];
 }
 static int Json_Get_Variable_Val_4()
 {
-	return RC_ch[4];
+	return Rc.RC_ch[4];
 }
 static int Json_Get_Variable_Val_5()
 {
-	return RC_ch[5];
+	return Rc.RC_ch[5];
 }
 static int Json_Get_Variable_Val_6()
 {
-	return RC_ch[6];
+	return Rc.RC_ch[6];
 }
 static int Json_Get_Variable_Val_7()
 {
-	return RC_ch[7];
+	return Rc.RC_ch[7];
 }
 
 
@@ -174,6 +174,7 @@ void joson_create_uav_data_send()
 		cJSON_AddNumberToObject(head, "msg_no", msg_num);
 		cJSON_AddNumberToObject(head, "timestamp", timestamp);
 	cJSON_AddItemToObject(root,"data",data = cJSON_CreateObject());
+
 /*		cJSON_AddNumberToObject(data, "Battery", Json_Get_Battery());
 		cJSON_AddNumberToObject(data, "Longitude", Json_Get_Longitude());
 		cJSON_AddNumberToObject(data, "Latitude", Json_Get_Latitude());
@@ -325,7 +326,7 @@ void Task_ParseJSON(void *pvParameters)
 			isRecvFlinis = false;
 			json_parse(&user_data);
 		}
-		vTaskDelay(10/portTICK_RATE_MS);
+		vTaskDelay(100/portTICK_RATE_MS);
 	}
 }
 

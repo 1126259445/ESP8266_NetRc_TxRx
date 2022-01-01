@@ -23,6 +23,7 @@
 #include "esp8266/pin_mux_register.h"
 
 #include "driver/gpio.h"
+#include "Dev_Ppm.h"
 
 static const char *TAG = "Dev_Ppm";
 
@@ -34,8 +35,7 @@ static const char *TAG = "Dev_Ppm";
 #define CYCLE_MIN   900
 #define CYCLE_MAX   2000
 
-uint16_t RC_ch[10] = {0};
-
+Rc_t Rc;
 
 /******************************************************************************
  * FunctionName : gpio_intr_handler
@@ -57,7 +57,8 @@ void gpio_isr_handler(void)
     {
         if(cycle >= CYCLE_MIN && cycle <= CYCLE_MAX)
         {
-            RC_ch[i] = cycle;
+            Rc.RC_ch[i] = cycle;
+            Rc.recv_time = current_time;
         }
         i++;
     }
@@ -123,7 +124,17 @@ void Task_Show_Ppm(void *pvParameters)
 {
     while(1)
     {
-        ESP_LOGI(TAG, "RC_ch= %d,%d,%d,%d,%d,%d,%d,%d,%d%d",RC_ch[0],RC_ch[1],RC_ch[2],RC_ch[3],RC_ch[4],RC_ch[5],RC_ch[6],RC_ch[7],RC_ch[8],RC_ch[9]);
+        if(esp_get_time() - Rc.recv_time > 2000000)
+        {
+            ESP_LOGI(TAG, "RC_PPM lost 2s!!!!!!!!!!!!");
+            memset(Rc.RC_ch,1500,10);
+        }
+        else
+        {
+            ESP_LOGI(TAG, "RC_ch= %d,%d,%d,%d,%d,%d,%d,%d,%d%d",Rc.RC_ch[0],Rc.RC_ch[1],Rc.RC_ch[2],Rc.RC_ch[3],\
+            Rc.RC_ch[4],Rc.RC_ch[5],Rc.RC_ch[6],Rc.RC_ch[7],Rc.RC_ch[8],Rc.RC_ch[9]);
+
+        }      
         vTaskDelay(200/portTICK_RATE_MS);
     }
 
