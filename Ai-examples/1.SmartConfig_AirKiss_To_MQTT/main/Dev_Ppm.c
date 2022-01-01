@@ -27,8 +27,8 @@
 
 static const char *TAG = "Dev_Ppm";
 
-#define PPM_IN_PIN  GPIO_Pin_12
-#define GPIO_INPUT_IO_0     12
+//#define PPM_IN_PIN  GPIO_Pin_12
+#define GPIO_INPUT_IO_0     5
 #define GPIO_INPUT_PIN_SEL  (1ULL<<GPIO_INPUT_IO_0)
 
 #define FIRST_FIFTER_COUNTER    5
