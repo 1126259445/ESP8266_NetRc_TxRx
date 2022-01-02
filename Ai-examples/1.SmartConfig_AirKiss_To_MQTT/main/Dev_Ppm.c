@@ -27,7 +27,7 @@
 
 static const char *TAG = "Dev_Ppm";
 
-//#define PPM_IN_PIN  GPIO_Pin_12
+//#define PPM_IN_PIN  GPIO_Pin_5
 #define GPIO_INPUT_IO_0     5
 #define GPIO_INPUT_PIN_SEL  (1ULL<<GPIO_INPUT_IO_0)
 
@@ -53,23 +53,23 @@ void gpio_isr_handler(void)
 
     current_time = esp_get_time();
     uint32_t cycle = (current_time - last_time);
+    last_time = current_time;
+    
     if(first_recv == FIRST_FIFTER_COUNTER)
     {
-        if(cycle >= CYCLE_MIN && cycle <= CYCLE_MAX)
+        if(cycle >= CYCLE_MIN && cycle <= CYCLE_MAX && i < 10)
         {
             Rc.RC_ch[i] = cycle;
             Rc.recv_time = current_time;
+            i++;
         }
-        i++;
     }
-    if(cycle > 2000)
+    if(cycle > 3000)
     {
         i = 0;
         if(first_recv < FIRST_FIFTER_COUNTER)
             first_recv++;
     }
-
-    last_time = current_time;
 }
 /******************************************************************************
  * FunctionName : GpioConfig
@@ -108,7 +108,7 @@ void GpioConfig(void)
     //set as input mode
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
-    io_conf.pull_up_en = 1;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_conf);
 
     //change gpio intrrupt type for one pin

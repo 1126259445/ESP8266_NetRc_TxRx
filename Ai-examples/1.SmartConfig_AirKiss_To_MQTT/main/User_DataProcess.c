@@ -106,15 +106,15 @@ static uint32_t Json_Get_Switch()
 
 static int Json_Get_Variable_Val_0()
 {
-	return (Rc.RC_ch[0] - 1000) / 4;
+	return Rc.RC_ch[0];;
 }
 static int Json_Get_Variable_Val_1()
 {
-	return (Rc.RC_ch[1] - 1000)/4;
+	return Rc.RC_ch[1];
 }
 static int Json_Get_Variable_Val_2()
 {
-	return (Rc.RC_ch[2] - 1000)/4;
+	return Rc.RC_ch[2];
 }
 static int Json_Get_Variable_Val_3()
 {
