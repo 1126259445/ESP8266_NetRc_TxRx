@@ -23,20 +23,8 @@
 #include "esp8266/pin_mux_register.h"
 
 #include "driver/pwm.h"
+#include "Dev_Pwm.h"
 
-#define PWM_ALL_CH_NUM      8
-
-#define PWM_1_OUT_IO_NUM   15
-#define PWM_2_OUT_IO_NUM   13
-#define PWM_3_OUT_IO_NUM   2
-#define PWM_4_OUT_IO_NUM   12
-#define PWM_5_OUT_IO_NUM   4
-#define PWM_6_OUT_IO_NUM   5
-#define PWM_7_OUT_IO_NUM   14
-#define PWM_8_OUT_IO_NUM   16
-
-// PWM period 20000us(50hz), same as sover
-#define PWM_PERIOD    (20000)
 
 static const char *TAG = "Dev_Pwm";
 
@@ -62,11 +50,6 @@ int16_t phase[PWM_ALL_CH_NUM] = {
     0, 0, 0, 0, 0, 0, 0, 0
 };
 
-
-void Pwm_Poll()
-{
-    
-}
 
 void Set_Pwm_All_Chinel_Val(uint8_t ch_num,uint32_t *duty)
 {

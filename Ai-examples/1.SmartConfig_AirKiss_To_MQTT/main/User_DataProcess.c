@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
+#include "esp_log.h"
 #include "mqtt_client.h"
 #include "cJSON.h"
 #include <stdio.h>
@@ -15,6 +16,8 @@
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
+static const char *TAG = "User_DataProcess";
+
 #ifndef DEVECE_ID
 #define DEVECE_ID "DEV00003"
 #endif
@@ -286,15 +289,28 @@ static uint8_t json_parse(User_data *pMqttMsg)
  * @return: 
 */
 extern bool isRecvFlinis; //解析json数据的队列
+extern uint32_t esp_get_time(void);
 void Task_ParseJSON(void *pvParameters)
 {
+	static uint32_t LastRecvTime = 0;
 	while (1)
 	{
 		if(isRecvFlinis == true)
 		{
+			LastRecvTime = esp_get_time();
 			isRecvFlinis = false;
 			json_parse(&user_data);
 		}
+		else
+		{
+			if(esp_get_time() - LastRecvTime > 2000000)
+			{
+				ESP_LOGI(TAG, "Net Rc_Tx Data Lost!!!!!!!!!!!!!!");
+				Set_Pwm_All_Chinel_Val(8,duties);
+				vTaskDelay(500/portTICK_RATE_MS);
+			}
+		}
+		
 		vTaskDelay(10/portTICK_RATE_MS);
 	}
 }
