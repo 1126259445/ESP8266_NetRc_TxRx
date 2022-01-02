@@ -11,6 +11,7 @@ typedef struct
 {
     uint16_t RC_ch[10];
     uint32_t recv_time;
+    uint8_t ppm_lost;
 }Rc_t;
 extern Rc_t Rc;
 //=============================================================================

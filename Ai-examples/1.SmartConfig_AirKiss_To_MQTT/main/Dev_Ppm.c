@@ -61,6 +61,7 @@ void gpio_isr_handler(void)
         {
             Rc.RC_ch[i] = cycle;
             Rc.recv_time = current_time;
+            Rc.ppm_lost = 0;
             i++;
         }
     }
@@ -127,13 +128,13 @@ void Task_Show_Ppm(void *pvParameters)
         if(esp_get_time() - Rc.recv_time > 2000000)
         {
             ESP_LOGI(TAG, "RC_PPM lost 2s!!!!!!!!!!!!");
+            Rc.ppm_lost = 1;
             memset(Rc.RC_ch,1500,10);
         }
         else
         {
             ESP_LOGI(TAG, "RC_ch= %d,%d,%d,%d,%d,%d,%d,%d,%d%d",Rc.RC_ch[0],Rc.RC_ch[1],Rc.RC_ch[2],Rc.RC_ch[3],\
             Rc.RC_ch[4],Rc.RC_ch[5],Rc.RC_ch[6],Rc.RC_ch[7],Rc.RC_ch[8],Rc.RC_ch[9]);
-
         }      
         vTaskDelay(200/portTICK_RATE_MS);
     }

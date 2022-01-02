@@ -343,7 +343,10 @@ void Task_CreatJSON(void *pvParameters)
 		//post_data_to_clouds();
 		if (isConnect2Server)
 		{
-			joson_create_uav_data_send();
+			if(Rc.ppm_lost == 0)
+			{
+				joson_create_uav_data_send();
+			}
 		}
 
 		vTaskDelay(100/portTICK_RATE_MS);
