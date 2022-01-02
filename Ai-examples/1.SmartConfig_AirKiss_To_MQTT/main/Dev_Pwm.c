@@ -74,7 +74,7 @@ void Set_Pwm_All_Chinel_Val(uint8_t ch_num,uint32_t *duty)
     {
         if(i < PWM_ALL_CH_NUM)
         {
-            if(duty[i] >= 1000 && duty[i] <= 2000)
+            if(duty[i] >= 900 && duty[i] <= 2000)
             {
                 pwm_set_duty(i, duty[i]);
             }
