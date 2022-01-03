@@ -47,6 +47,7 @@
 #include "User_Sensor.h"
 #include "Dev_Oled_I2c.h"
 #include "Dev_Pwm.h"
+#include "Dev_Led.h"
 
 
 
@@ -341,6 +342,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		break;
 	case SYSTEM_EVENT_STA_GOT_IP:
 	{
+		Led_SetState(ON);
 		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 		int ret = pdFAIL;
 		if (handleMqtt == NULL)
@@ -353,6 +355,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 	}
 
 	case SYSTEM_EVENT_STA_DISCONNECTED:
+		Led_SetState(ONE_HZ);
 		esp_wifi_connect();
 		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		isConnect2Server = false;
@@ -434,6 +437,7 @@ void TaskSmartConfigAirKiss2Net(void *parm)
 	//否，进去配网模式
 	else
 	{
+		Led_SetState(FIVE_HZ);
 		ESP_LOGI(TAG, "into smartconfig mode");
 		ESP_ERROR_CHECK(esp_smartconfig_set_type(SC_TYPE_ESPTOUCH_AIRKISS));
 		ESP_ERROR_CHECK(esp_smartconfig_start(sc_callback));
@@ -547,6 +551,7 @@ void app_main(void)
 
 	//外设初始化
 	Pwm_Init();
+	Led_Init();
 	//OLED_I2C_Init();
 	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
 	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
