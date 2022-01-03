@@ -13,6 +13,7 @@
 #include "User_DataProcess.h"
 #include "Dev_Dht11.h"
 #include "Dev_Pwm.h"
+#include "Dev_Led.h"
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
@@ -297,6 +298,7 @@ void Task_ParseJSON(void *pvParameters)
 	{
 		if(isRecvFlinis == true)
 		{
+			Led_SetState(OFF);
 			LastRecvTime = esp_get_time();
 			isRecvFlinis = false;
 			json_parse(&user_data);
@@ -305,6 +307,7 @@ void Task_ParseJSON(void *pvParameters)
 		{
 			if(esp_get_time() - LastRecvTime > 2000000)
 			{
+				Led_SetState(ONE_HZ);
 				ESP_LOGI(TAG, "Net Rc_Tx Data Lost!!!!!!!!!!!!!!");
 				Set_Pwm_All_Chinel_Val(8,duties);
 				vTaskDelay(500/portTICK_RATE_MS);
