@@ -37,17 +37,16 @@ const uint32_t pin_num[PWM_ALL_CH_NUM] = {
     PWM_5_OUT_IO_NUM,
     PWM_6_OUT_IO_NUM,
     PWM_7_OUT_IO_NUM,
-    PWM_8_OUT_IO_NUM
 };
 
 // duties table, real_duty = duties[x]/PERIOD
 uint32_t duties[PWM_ALL_CH_NUM] = {
-    1500, 1500, 1500, 1500,1500, 1500, 1500, 1500
+    1500, 1500, 1500, 1500,1500, 1500, 1500
 };
 
 // phase table, delay = (phase[x]/360)*PERIOD
 int16_t phase[PWM_ALL_CH_NUM] = {
-    0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0
 };
 
 
