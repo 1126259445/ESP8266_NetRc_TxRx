@@ -113,7 +113,7 @@ esp_err_t MqttCloudsCallBack(esp_mqtt_event_handle_t event)
 		//连接成功
 	case MQTT_EVENT_CONNECTED:
 		ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-		msg_id = esp_mqtt_client_subscribe(client, MqttTopicSub, 1);
+		msg_id = esp_mqtt_client_subscribe(client, MqttTopicSub, 0);
 
 		ESP_LOGI(TAG, "sent subscribe[%s] successful, msg_id=%d", MqttTopicSub, msg_id);
 		ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
