@@ -13,6 +13,7 @@
 #include "Dev_Dht11.h"
 #include "Dev_Pwm.h"
 #include "Dev_Ppm.h"
+#include "Dev_Led.h"
 
 /*------------------------------JSON data---------------------------------------*/
 /*init mqtt_client publish_data for mqtt*/
@@ -346,7 +347,13 @@ void Task_CreatJSON(void *pvParameters)
 			if(Rc.ppm_lost == 0)
 			{
 				joson_create_uav_data_send();
+				 Led_SetState(OFF);
 			}
+			else
+			{
+				Led_SetState(ONE_HZ);
+			}
+			
 		}
 
 		vTaskDelay(100/portTICK_RATE_MS);
