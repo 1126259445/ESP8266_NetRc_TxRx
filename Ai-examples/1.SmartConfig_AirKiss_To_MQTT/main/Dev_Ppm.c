@@ -44,6 +44,7 @@ Rc_t Rc;
  * Returns      : void
 *******************************************************************************/
 extern uint32_t esp_get_time(void);
+
 void gpio_isr_handler(void)
 {
     static uint8_t i = 0;
@@ -54,7 +55,45 @@ void gpio_isr_handler(void)
     current_time = esp_get_time();
     uint32_t cycle = (current_time - last_time);
     last_time = current_time;
-    
+  
+    if(first_recv == 1)
+    {
+       // if(cycle > 390 && cycle < 410)
+
+        if(cycle >= CYCLE_MIN && cycle <= CYCLE_MAX && i < 10)
+        {
+            Rc.RC_ch[i] = cycle;
+            Rc.recv_time = current_time;
+            Rc.ppm_lost = 0;
+            i++;
+
+            if(i > 8 )
+                first_recv = 0;
+        }
+        else
+        {
+            first_recv = 0;
+        }
+        
+    }
+    else if(cycle >= 2000 && cycle <= 20000)
+    {
+        i = 0;
+        first_recv = 1;
+    }
+}
+#if 0
+void gpio_isr_handler(void)
+{
+    static uint8_t i = 0;
+    static uint8_t first_recv = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+    static uint32_t last_time = 0;
+    static uint32_t current_time = 0;
+
+    current_time = esp_get_time();
+    uint32_t cycle = (current_time - last_time);
+    last_time = current_time;
+  
     if(first_recv == FIRST_FIFTER_COUNTER)
     {
         if(cycle >= CYCLE_MIN && cycle <= CYCLE_MAX && i < 10)
@@ -72,6 +111,7 @@ void gpio_isr_handler(void)
             first_recv++;
     }
 }
+#endif
 /******************************************************************************
  * FunctionName : GpioConfig
  * Description  : GpioConfig
@@ -110,6 +150,8 @@ void GpioConfig(void)
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     gpio_config(&io_conf);
 
     //change gpio intrrupt type for one pin
