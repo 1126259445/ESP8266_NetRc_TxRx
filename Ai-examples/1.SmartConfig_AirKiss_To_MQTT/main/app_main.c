@@ -342,7 +342,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		break;
 	case SYSTEM_EVENT_STA_GOT_IP:
 	{
-		Led_SetState(ON);
+		Led_SetState(ONE_HZ);
 		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 		int ret = pdFAIL;
 		if (handleMqtt == NULL)
@@ -354,8 +354,8 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		break;
 	}
 
-	case SYSTEM_EVENT_STA_DISCONNECTED:
-		Led_SetState(ONE_HZ);
+	case SYSTEM_EVENT_STA_DISCONNECTED:	
+		Led_SetState(ON);
 		esp_wifi_connect();
 		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		isConnect2Server = false;
