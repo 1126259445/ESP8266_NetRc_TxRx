@@ -41,6 +41,7 @@
 #include <lwip/netdb.h>
 #include "xpwm.h"
 
+#include "User_HttpSever.h"
 #include "User_HttpRequest_Weather.h"
 #include "User_HttpRequest_Time.h"
 #include "User_DataProcess.h"
@@ -87,7 +88,7 @@ int sock_fd;
 #define BUTTON_GPIO 0
 //设备信息
 #define DEVICE_TYPE "ESP_NetRc_Rx"
-#define TX_UUID "2cf4327733c5"	//TX UUID
+#define TX_UUID "30839893c03e"	//TX UUID
 
 //mqtt
 esp_mqtt_client_handle_t client;
@@ -333,15 +334,36 @@ bool startAirkissTask()
  * @param: 
  * @return: 
 */
+size_t size = 0;
+nvs_handle out_handle;
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
 	switch (event->event_id)
 	{
+	case SYSTEM_EVENT_AP_START:
+		Led_SetState(ON);
+		HttpSever_Init();
+		break;
+
 	case SYSTEM_EVENT_STA_START:
-		xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
+
+		//从本地存储读取是否存在ssid和password
+		if (nvs_open("wifi_info", NVS_READONLY, &out_handle) == ESP_OK)
+		{
+			wifi_config_t config;
+			memset(&config, 0x0, sizeof(config));
+			size = sizeof(config.sta.ssid);
+			if (nvs_get_str(out_handle, "ssid", (char *)config.sta.ssid, &size) == ESP_OK)
+			{
+				if (nvs_get_str(out_handle, "password", (char *)config.sta.password, &size) == ESP_OK)
+				{
+					routerStartConnect();
+				}
+			}
+		}
+		//xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
 		break;
 	case SYSTEM_EVENT_STA_GOT_IP:
-	{
 		Led_SetState(ONE_HZ);
 		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
 		int ret = pdFAIL;
@@ -352,10 +374,12 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			printf("create TaskXMqttRecieve thread failed.\n");
 		}
 		break;
-	}
 
-	case SYSTEM_EVENT_STA_DISCONNECTED:	
-		Led_SetState(ON);
+	case SYSTEM_EVENT_STA_DISCONNECTED:
+		if(Led_GetState() != FIVE_HZ)
+		{	
+			Led_SetState(ON);
+		}
 		esp_wifi_connect();
 		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		isConnect2Server = false;
@@ -470,18 +494,51 @@ void TaskSmartConfigAirKiss2Net(void *parm)
 	}
 }
 
+/******************************************************************************
+ * FunctionName : Set_AP
+ * Description  : entry of user application, init user function here
+ * Parameters   : none
+ * Returns      : none
+*******************************************************************************/
+void Set_STA(void)
+{
+	esp_wifi_stop();
+/*
+	tcpip_adapter_init();
+	wifi_event_group = xEventGroupCreate();
+	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+*/
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+	
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_start());
+}
+
 //短按函数
 static void ButtonShortPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonShortPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
-
+	ESP_LOGI(TAG, "ENTER Set_AP");
+	//esp_smartconfig_stop();
+	//Set_AP();
+	
 }
 //长按函数
+
 static void ButtonLongPressCallBack(void *arg)
 {
+	static uint8_t flag = 1;
+
 	ESP_LOGI(TAG, "ButtonLongPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
+
 	//重启并进去配网模式
-	xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
+	esp_wifi_disconnect();
+	router_wifi_clean_info();
+	//Set_STA();
+	vTaskDelay(100 / portTICK_RATE_MS);
+	xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
+	//xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
 }
 
 /**
@@ -503,6 +560,23 @@ void TaskButton(void *pvParameters)
 
 	vTaskDelete(NULL);
 }
+
+#if 0
+void set_default_ipaddr()
+{
+	//关闭DHCP
+	ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
+	//填充结构体
+	tcpip_adapter_ip_info_t tcpip_adapter_ip_info;
+	IP4_ADDR(&tcpip_adapter_ip_info.ip, 192,168,1,1);
+	IP4_ADDR(&tcpip_adapter_ip_info.gw, 192,168,1,1);
+	IP4_ADDR(&tcpip_adapter_ip_info.netmask, 255,255,255,0);
+	//设置IP地址
+	ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP,&tcpip_adapter_ip_info));
+	//启动dhcp
+	ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
+}
+#endif
 
 
 
@@ -538,10 +612,17 @@ void app_main(void)
 	sprintf(deviceUUID, "%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	sprintf((char *)deviceInfo, "{\"type\":\"%s\",\"mac\":\"%s\"}", DEVICE_TYPE, deviceUUID);
 	
-	//组建MQTT订阅的主题
-	sprintf(MqttTopicSub, "%s/Down", TX_UUID);
+	uint8_t TxMac[32] = {0};
+	if(NetRc_Read_info(TxMac))
+	{
+		sprintf(MqttTopicSub, "%s/Down", TxMac);
+	}else
+	{
+			//组建MQTT订阅的主题
+		sprintf(MqttTopicSub, "%s/Down", TX_UUID);
+	}
 	//组建MQTT推送的主题
-	sprintf(MqttTopicPub, "%s/Up", TX_UUID);
+	sprintf(MqttTopicPub, "%s/Up", deviceUUID);
 
 	ESP_LOGI(TAG, "flagNet: %d", flagNet);
 	ESP_LOGI(TAG, "deviceUUID: %s", deviceUUID);
@@ -556,13 +637,27 @@ void app_main(void)
 	xTaskCreate(TaskButton, "TaskButton", 1024, NULL, 6, NULL);
 	//xTaskCreate(Task_Sensor, "Task_Sensor", 1024, NULL, 6, NULL);
 	
+	
 	tcpip_adapter_init();
 	wifi_event_group = xEventGroupCreate();
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 	ESP_ERROR_CHECK(esp_wifi_start());
+
+
+
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = "ESP8266",
+            .ssid_len = strlen("ESP8266"),
+            .password = "123456",
+            .max_connection = 4,
+            .authmode = WIFI_AUTH_OPEN},
+    };
+	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_LOGI(TAG, "wifi_init_softap finished.SSID:%s password:%s",wifi_config.ap.ssid,wifi_config.ap.password);
 }

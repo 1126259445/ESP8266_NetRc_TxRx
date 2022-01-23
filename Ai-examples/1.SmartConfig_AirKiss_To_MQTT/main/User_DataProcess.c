@@ -296,24 +296,26 @@ void Task_ParseJSON(void *pvParameters)
 	static uint32_t LastRecvTime = 0;
 	while (1)
 	{
-		if(isRecvFlinis == true)
+		if(isConnect2Server)
 		{
-			Led_SetState(OFF);
-			LastRecvTime = esp_get_time();
-			isRecvFlinis = false;
-			json_parse(&user_data);
-		}
-		else
-		{
-			if(esp_get_time() - LastRecvTime > 2000000)
+			if(isRecvFlinis == true)
 			{
-				Led_SetState(ONE_HZ);
-				ESP_LOGI(TAG, "Net Rc_Tx Data Lost!!!!!!!!!!!!!!");
-				Set_Pwm_All_Chinel_Val(8,duties);
-				vTaskDelay(500/portTICK_RATE_MS);
+				Led_SetState(OFF);
+				LastRecvTime = esp_get_time();
+				isRecvFlinis = false;
+				json_parse(&user_data);
+			}
+			else
+			{
+				if(esp_get_time() - LastRecvTime > 2000000)
+				{
+					Led_SetState(ONE_HZ);
+					ESP_LOGI(TAG, "Net Rc_Tx Data Lost!!!!!!!!!!!!!!");
+					Set_Pwm_All_Chinel_Val(8,duties);
+					vTaskDelay(500/portTICK_RATE_MS);
+				}
 			}
 		}
-		
 		vTaskDelay(10/portTICK_RATE_MS);
 	}
 }

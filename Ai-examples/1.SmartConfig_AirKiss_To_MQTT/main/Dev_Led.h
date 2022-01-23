@@ -6,8 +6,8 @@
 
 #define GPIO_OUTPUT_IO_LED    16
 #define GPIO_OUTPUT_PIN_SEL  (1ULL<<GPIO_OUTPUT_IO_LED)
-#define LED_ON()    gpio_set_level(GPIO_OUTPUT_IO_LED, 0)
-#define LED_OFF()   gpio_set_level(GPIO_OUTPUT_IO_LED, 1)
+#define LED_ON()    gpio_set_level(GPIO_OUTPUT_IO_LED, 1)
+#define LED_OFF()   gpio_set_level(GPIO_OUTPUT_IO_LED, 0)
 
 typedef enum{
     OFF = 0,
