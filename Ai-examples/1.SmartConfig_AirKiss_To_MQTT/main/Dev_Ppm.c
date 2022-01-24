@@ -81,6 +81,9 @@ void gpio_isr_handler(void)
         i = 0;
         first_recv = 1;
     }
+
+        GPIO_REG_WRITE( GPIO_STATUS_W1TC_ADDRESS, GPIO_INPUT_PIN_SEL); //clear interrupt mask
+        _xt_isr_unmask(GPIO_INPUT_PIN_SEL); //Enable the GPIO interrupt
 }
 #if 0
 void gpio_isr_handler(void)
