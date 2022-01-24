@@ -45,6 +45,7 @@
 #include "User_HttpRequest_Time.h"
 #include "User_DataProcess.h"
 #include "User_Sensor.h"
+#include "User_HttpSever.h"
 #include "Dev_Oled_I2c.h"
 #include "Dev_Pwm.h"
 #include "Dev_Ppm.h"
@@ -337,12 +338,35 @@ bool startAirkissTask()
  * @param: 
  * @return: 
 */
+size_t size = 0;
+nvs_handle out_handle;
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
 	switch (event->event_id)
 	{
+	case SYSTEM_EVENT_AP_START:
+		Led_SetState(ON);
+		HttpSever_Init();
+		break;
+
 	case SYSTEM_EVENT_STA_START:
-		xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
+		Led_SetState(ON);
+		//从本地存储读取是否存在ssid和password
+		if (nvs_open("wifi_info", NVS_READONLY, &out_handle) == ESP_OK)
+		{
+			wifi_config_t config;
+			memset(&config, 0x0, sizeof(config));
+			size = sizeof(config.sta.ssid);
+			if (nvs_get_str(out_handle, "ssid", (char *)config.sta.ssid, &size) == ESP_OK)
+			{
+				if (nvs_get_str(out_handle, "password", (char *)config.sta.password, &size) == ESP_OK)
+				{
+					routerStartConnect();
+				}
+			}
+		}
+
+		//xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
 		break;
 	case SYSTEM_EVENT_STA_GOT_IP:
 	{
@@ -359,7 +383,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 	}
 
 	case SYSTEM_EVENT_STA_DISCONNECTED:
-		Led_SetState(ON);
+		if(Led_GetState() != FIVE_HZ)
+		{	
+			Led_SetState(ON);
+		}
 		esp_wifi_connect();
 		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		isConnect2Server = false;
@@ -485,7 +512,14 @@ static void ButtonLongPressCallBack(void *arg)
 {
 	ESP_LOGI(TAG, "ButtonLongPressCallBack  esp_get_free_heap_size(): %d ", esp_get_free_heap_size());
 	//重启并进去配网模式
-	xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
+	//重启并进去配网模式
+	esp_wifi_disconnect();
+	router_wifi_clean_info();
+	//Set_STA();
+	vTaskDelay(100 / portTICK_RATE_MS);
+	xTaskCreate(TaskSmartConfigAirKiss2Net, "TaskSmartConfigAirKiss2Net", 1024 * 2, NULL, 3, NULL);
+
+	//xTaskCreate(TaskRestartSystem, "TaskRestartSystem", 1024, NULL, 6, NULL);
 }
 
 /**
@@ -568,6 +602,17 @@ void app_main(void)
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 	ESP_ERROR_CHECK(esp_wifi_start());
+
+	wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = "ESP8266",
+            .ssid_len = strlen("ESP8266"),
+            .password = "123456",
+            .max_connection = 4,
+            .authmode = WIFI_AUTH_OPEN},
+    };
+	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_LOGI(TAG, "wifi_init_softap finished.SSID:%s password:%s",wifi_config.ap.ssid,wifi_config.ap.password);
 }

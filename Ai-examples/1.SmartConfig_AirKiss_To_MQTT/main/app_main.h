@@ -1,6 +1,7 @@
 #ifndef __APP_MIAN_H__
 #define __APP_MIAN_H__
 
+extern char deviceUUID[17];
 extern char MqttTopicSub[30];
 extern char MqttTopicPub[30];
 
